@@ -63,7 +63,7 @@ export default function SignUpPage() {
         },
         onSuccess: async () => {
           toast.success("Account created successfully")
-          router.push("/dashboard")
+          router.push("/sign-in")
         }
       }
     })
