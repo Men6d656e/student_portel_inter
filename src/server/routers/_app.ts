@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { publicProcedure, protectedProcedure, router } from "../trpc";
 
+import { teacherRouter } from "./teacher";
+
 export const appRouter = router({
+  teacher: teacherRouter,
   hello: publicProcedure
     .input(
       z.object({

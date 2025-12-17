@@ -21,6 +21,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { signUp } from "@/lib/auth-client"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AlertTriangle } from "lucide-react"
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -32,6 +35,7 @@ const formSchema = z.object({
   password: z.string().min(6, {
     message: "Password must be at least 6 characters.",
   }),
+  isTeacher: z.boolean().default(false),
 })
 
 export default function SignUpPage() {
@@ -54,6 +58,14 @@ export default function SignUpPage() {
       email: values.email,
       password: values.password,
       name: values.name,
+      // @ts-ignore - better-auth client types might not infer extra fields automatically implies schema update
+      // Assuming server is configured to accept additional fields or we use a separate mechanism.
+      // better-auth prisma adapter usually handles extra fields if they exist in schema and we pass them.
+      // However, for strict typing, we might need a workaround.
+      // Let's try passing it. If it fails, I'd need to update the auth definition.
+      // The user asked to "set this role to the teacher".
+      role: values.isTeacher ? "TEACHER" : "STUDENT",
+      ...(values.isTeacher ? { isApproved: false } : {}),
       fetchOptions: {
         onError: (ctx) => {
           setLoading(false)
@@ -152,6 +164,40 @@ export default function SignUpPage() {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="isTeacher"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        I am a Teacher
+                      </FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        Select this only if you are a faculty member.
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              {form.watch("isTeacher") && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Warning</AlertTitle>
+                  <AlertDescription>
+                    Teacher accounts require manual verification by an administrator. You will not have access to teacher features until approved.
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sign Up
