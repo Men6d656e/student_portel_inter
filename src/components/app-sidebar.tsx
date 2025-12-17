@@ -5,7 +5,9 @@ import {
     GraduationCap,
     LogOut,
     Users,
-    UserSquare2 // Using this for Teachers
+    UserSquare2,
+    User,
+    Upload
 } from "lucide-react"
 
 import {
@@ -20,12 +22,13 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { signOut } from "@/lib/auth-client"
+import { signOut, useSession } from "@/lib/auth-client"
 import { useRouter, usePathname } from "next/navigation"
 import { toast } from "sonner"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // Menu items.
-const items = [
+const adminItems = [
     {
         title: "Teachers",
         url: "/dashboard/teachers",
@@ -48,9 +51,28 @@ const items = [
     },
 ]
 
+const teacherItems = [
+    {
+        title: "Profile",
+        url: "/dashboard/profile",
+        icon: User,
+    },
+    {
+        title: "Results",
+        url: "/dashboard/results",
+        icon: GraduationCap,
+    },
+    {
+        title: "Uploads",
+        url: "/dashboard/uploads",
+        icon: Upload,
+    },
+]
+
 export function AppSidebar() {
     const router = useRouter()
     const pathname = usePathname()
+    const { data: session, isPending } = useSession()
 
     const handleLogout = async () => {
         await signOut({
@@ -61,6 +83,22 @@ export function AppSidebar() {
                 },
             },
         })
+    }
+
+    const items = (session?.user as any)?.role === "TEACHER" ? teacherItems : adminItems
+
+    if (isPending) {
+        return (
+            <Sidebar>
+                <SidebarContent>
+                    <div className="p-4 space-y-4">
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                    </div>
+                </SidebarContent>
+            </Sidebar>
+        )
     }
 
     return (

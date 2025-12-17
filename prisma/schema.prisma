@@ -18,18 +18,44 @@ enum Role {
   STUDENT
 }
 
+enum Subject {
+  ENGLISH
+  URDU
+  PHYSICS
+  CHEMISTRY
+  BIOLOGY
+  THQ
+  PAK_STUDY
+  MATH
+  STAT
+  ECONOMICS
+  COMPUTER
+  SOCIOLOGY
+  EDUCATION
+  ISL_ELE
+  H_AND_P_EDUCATION
+  PSYCHOLOGY
+}
+
+enum ResultType {
+  DECEMBER_TEST
+  MID_TERM
+  FINAL
+  OTHER
+}
+
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  emailVerified Boolean   @default(false)
-  image         String?
-  role          Role      @default(STUDENT)
-  isApproved    Boolean   @default(false)
-  sessions      Session[]
-  accounts      Account[]
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  emailVerified   Boolean   @default(false)
+  image           String?
+  role            Role      @default(STUDENT)
+  isApproved      Boolean   @default(false)
+  sessions        Session[]
+  accounts        Account[]
   uploadedResults Result[]
 
   @@map("user")
@@ -84,27 +110,50 @@ model Verification {
 }
 
 model Result {
-  id          String   @id @default(cuid())
-  teacherId   String
-  teacher     User     @relation(fields: [teacherId], references: [id])
-  subject     String
-  totalMarks  Int
-  obtainMarks Int
-  degree      String   // FA, CS, NM, Medical
-  date        DateTime @default(now())
+  id             String          @id @default(cuid())
+  uploadedById   String
+  uploadedBy     User            @relation(fields: [uploadedById], references: [id])
+  subject        Subject
+  resultType     ResultType
+  totalMarks     Int
+  degree         String // Medical, Non-Medical, ICS, FA
+  class          String // 1st Year, 2nd Year
+  session        String // e.g., "2023-2024"
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  studentResults StudentResult[]
 
-  @@index([teacherId])
+  @@index([uploadedById])
+  @@index([subject])
+  @@index([resultType])
   @@map("result")
 }
 
+model StudentResult {
+  id            String   @id @default(cuid())
+  studentId     String
+  student       Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  resultId      String
+  result        Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  obtainedMarks Int
+  createdAt     DateTime @default(now())
+
+  @@unique([studentId, resultId])
+  @@index([studentId])
+  @@index([resultId])
+  @@map("student_result")
+}
+
 model Student {
-  id        String   @id @default(cuid())
-  name      String
-  rollNo    String   @unique
-  class     String   // 1year or 2year
-  degree    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String          @id @default(cuid())
+  name           String
+  rollNo         String          @unique
+  class          String // 1st Year or 2nd Year
+  degree         String
+  session        String // e.g., "2023-2024"
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  studentResults StudentResult[]
 
   @@map("student")
 }

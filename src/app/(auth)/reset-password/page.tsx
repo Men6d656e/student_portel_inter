@@ -1,7 +1,7 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
-import { Loader2, GraduationCap, Eye, EyeOff } from "lucide-react";
+import { Loader, GraduationCap, Eye, EyeOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import { toast } from "sonner";
@@ -126,7 +126,7 @@ function ResetPasswordContent() {
                 </div>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
                 Reset Password
             </Button>
         </form>
@@ -150,7 +150,7 @@ export default function ResetPasswordPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Suspense fallback={<div className="flex justify-center"><Loader2 className="animate-spin" /></div>}>
+                    <Suspense fallback={<div className="flex justify-center"><Loader className="animate-spin" /></div>}>
                         <ResetPasswordContent />
                     </Suspense>
                 </CardContent>

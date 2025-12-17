@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Eye, EyeOff, GraduationCap, Loader2 } from "lucide-react"
+import { Eye, EyeOff, GraduationCap, Loader } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -199,7 +199,7 @@ export default function SignUpPage() {
               )}
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
                 Sign Up
               </Button>
             </form>

@@ -1,7 +1,7 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
-import { Loader2, GraduationCap } from "lucide-react";
+import { Loader, GraduationCap } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -64,7 +64,7 @@ export default function ForgotPasswordPage() {
                                 />
                             </div>
                             <Button type="submit" className="w-full" disabled={loading}>
-                                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
                                 Send Reset Link
                             </Button>
                         </form>

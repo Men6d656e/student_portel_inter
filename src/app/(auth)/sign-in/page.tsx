@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Eye, EyeOff, GraduationCap, Loader2 } from "lucide-react"
+import { Eye, EyeOff, GraduationCap, Loader } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { signIn } from "@/lib/auth-client"
+import { signIn, getSession } from "@/lib/auth-client"
 
 const formSchema = z.object({
   email: z.email({
@@ -57,7 +57,18 @@ export default function SignInPage() {
         },
         onSuccess: async () => {
           toast.success("Logged in successfully")
-          router.push("/dashboard")
+          // Fetch session to get user role
+          const { data: session } = await getSession()
+          const userRole = (session?.user as any)?.role
+
+          // Redirect based on role
+          if (userRole === "ADMIN") {
+            router.push("/dashboard/teachers")
+          } else if (userRole === "TEACHER") {
+            router.push("/dashboard/profile")
+          } else {
+            router.push("/dashboard")
+          }
         }
       }
     })
@@ -142,7 +153,7 @@ export default function SignInPage() {
                 </Link>
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
                 Sign In
               </Button>
             </form>
