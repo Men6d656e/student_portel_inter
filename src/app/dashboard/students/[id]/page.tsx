@@ -1,5 +1,5 @@
 
-import { StudentForm } from "@/components/dashboard/student-form"
+import { StudentForm } from "@/app/dashboard/students/_components/student-form"
 
 export default async function EditStudentPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params

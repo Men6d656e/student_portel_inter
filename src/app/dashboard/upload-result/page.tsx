@@ -35,7 +35,6 @@ const subjects = [
 const resultTypes = [
     { label: "December Test", value: "DECEMBER_TEST" },
     { label: "Mid Term", value: "MID_TERM" },
-    { label: "Final", value: "FINAL" },
     { label: "Other", value: "OTHER" },
 ]
 
@@ -138,7 +137,7 @@ export default function UploadResultPage() {
                 rollNo: item.rollNo,
                 obtainedMarks: item.marks,
             }))
-
+            console.log(studentResults)
             // Call tRPC mutation
             createMutation.mutate({
                 subject: formData.subject as any,
@@ -156,25 +155,22 @@ export default function UploadResultPage() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 p-8">
             <div className="flex items-center gap-4">
-                <Button variant="outline" size="icon" onClick={() => router.back()}>
-                    <ArrowLeft className="h-4 w-4" />
-                </Button>
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Upload Result</h1>
                     <p className="text-muted-foreground">Upload student results from a file</p>
                 </div>
             </div>
 
-            <Card className="max-w-4xl">
+            <Card className="">
                 <CardHeader>
                     <CardTitle>Result Information</CardTitle>
                     <CardDescription>Enter the details and upload the result file (CSV, Excel, or Image)</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                             <div className="space-y-2">
                                 <Label>Subject</Label>
                                 <Select onValueChange={(val) => setFormData({ ...formData, subject: val })} value={formData.subject}>

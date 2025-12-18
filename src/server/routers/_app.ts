@@ -4,11 +4,13 @@ import { publicProcedure, protectedProcedure, router } from "../trpc";
 import { teacherRouter } from "./teacher";
 import { studentRouter } from "./student";
 import { resultRouter } from "./result";
+import { UploadedResultRouter } from "./myUploads";
 
 export const appRouter = router({
   teacher: teacherRouter,
   student: studentRouter,
   result: resultRouter,
+  uploadedResults:UploadedResultRouter,
   hello: publicProcedure
     .input(
       z.object({

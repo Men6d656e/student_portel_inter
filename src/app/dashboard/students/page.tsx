@@ -175,7 +175,9 @@ export default function StudentsPage() {
 
       // Call tRPC mutation
       await bulkCreateMutation.mutateAsync({ students: studentsToCreate })
+      console.log(studentsToCreate)
     } catch (error) {
+      console.log(error)
       toast.error((error as Error).message || "Failed to process file")
       setIsProcessing(false)
     }
@@ -199,7 +201,7 @@ export default function StudentsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Student Management</h1>
           <p className="text-muted-foreground">Manage student records and enrollments.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 sm:flex-row flex-col w-full sm:w-auto">
           <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
             <Upload className="mr-2 h-4 w-4" /> Import Students
           </Button>
@@ -255,6 +257,8 @@ export default function StudentsPage() {
       )}
 
       {/* Table with Tabs and Search */}
+      <div className="shadow-sm border rounded-lg p-6 bg-card text-card-foreground">
+
       {isLoading && !studentsData ? (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -282,15 +286,17 @@ export default function StudentsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Tabs defaultValue="ALL" onValueChange={handleTabChange} className="w-[400px]">
-              <TabsList>
+          <div className="flex  sm:flex-row flex-col gap-4">
+            <div className="">
+            <Tabs defaultValue="ALL" onValueChange={handleTabChange} className="w-full">
+              <TabsList className="w-full">
                 <TabsTrigger value="ALL">All Students</TabsTrigger>
                 <TabsTrigger value="1st Year">1st Year</TabsTrigger>
                 <TabsTrigger value="2nd Year">2nd Year</TabsTrigger>
               </TabsList>
             </Tabs>
-            <div className="relative w-64">
+            </div>
+            <div className="relative sm:w-64 md:ml-auto w-full">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search students..."
@@ -301,7 +307,7 @@ export default function StudentsPage() {
             </div>
           </div>
 
-          <div className="rounded-md border">
+          <div className="rounded-md border p-2">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -310,6 +316,8 @@ export default function StudentsPage() {
                   <TableHead>Class</TableHead>
                   <TableHead>Degree</TableHead>
                   <TableHead>Session</TableHead>
+                  <TableHead>Results</TableHead>
+
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -328,6 +336,14 @@ export default function StudentsPage() {
                       <TableCell>{student.class}</TableCell>
                       <TableCell>{student.degree}</TableCell>
                       <TableCell>{student.session}</TableCell>
+                      <TableCell>
+                        <Button variant="link" size="sm" asChild>
+                          {/* TODO */}
+                          <Link href={`#`}>
+                            View Results
+                          </Link>
+                        </Button>
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button variant="outline" size="sm" asChild>
@@ -354,7 +370,7 @@ export default function StudentsPage() {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-end space-x-2 py-4">
+          <div className="flex items-center sm:justify-end justify-center space-x-2 py-4">
             <Button
               variant="outline"
               size="sm"
@@ -379,6 +395,8 @@ export default function StudentsPage() {
           </div>
         </div>
       )}
+      </div>
+
 
       {/* File Upload Dialog */}
       <Dialog open={uploadDialogOpen} onOpenChange={(open) => {
