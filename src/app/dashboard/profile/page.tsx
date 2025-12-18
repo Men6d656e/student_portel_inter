@@ -41,7 +41,7 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="p-8 space-y-8 max-w-4xl mx-auto">
+        <div className="p-8 space-y-8 ">
             <h1 className="text-3xl font-bold">Profile</h1>
 
             {/* Profile Details Card */}
@@ -63,7 +63,7 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div className="grid gap-2">
+                    <div className="grid gap-2 hover:cursor-not-allowed">
                         <Label htmlFor="email">Email</Label>
                         <Input id="email" value={session?.user?.email || ""} disabled />
                         <p className="text-xs text-muted-foreground">Email cannot be changed.</p>
@@ -85,24 +85,7 @@ export default function ProfilePage() {
                     </div>
                 </CardContent>
             </Card>
-
-            {/* Upload Stats Card */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Upload Statistics</CardTitle>
-                    <CardDescription>Overview of your uploaded results.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="p-4 border rounded-lg bg-card text-card-foreground shadow-sm">
-                            <p className="text-sm font-medium text-muted-foreground">Total Uploads</p>
-                            <h2 className="text-2xl font-bold">0</h2>
-                            {/* Placeholder: Needs to fetch from API */}
-                        </div>
-                        {/* Add more stats if needed */}
-                    </div>
-                </CardContent>
-            </Card>
+           
         </div>
     )
 }

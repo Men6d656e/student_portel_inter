@@ -59,3 +59,30 @@ const isAdmin = t.middleware(async ({ ctx, next }) => {
 });
 
 export const adminProcedure = t.procedure.use(isAdmin);
+
+
+const isStaff = t.middleware(async({ ctx, next }) => {
+  if (!ctx.session?.user.id) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "Not Authenticated" });
+  }
+  const dbUser = await ctx.db.user.findUnique({
+    where:{id:ctx.session.user.id},
+    select:{role:true}
+  })
+  if(!dbUser|| ( dbUser.role !== "ADMIN" && dbUser.role !== "TEACHER")){
+    throw new TRPCError({ code: "FORBIDDEN", message: "Staff access required" });
+  }
+
+  return next({
+    ctx: {
+      ...ctx,
+      user:{
+        ...ctx.session.user,
+        role:dbUser.role
+      }
+    },
+  });
+});
+
+// 2. EXPORT THE NEW PROCEDURE
+export const staffProcedure = t.procedure.use(isStaff);

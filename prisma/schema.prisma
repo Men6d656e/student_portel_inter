@@ -40,7 +40,6 @@ enum Subject {
 enum ResultType {
   DECEMBER_TEST
   MID_TERM
-  FINAL
   OTHER
 }
 

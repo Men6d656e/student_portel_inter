@@ -90,7 +90,7 @@ export function TeacherForm({ initialData }: TeacherFormProps) {
     const isLoading = createMutation.isPending || updateMutation.isPending;
 
     return (
-        <div className="flex flex-col gap-6 max-w-2xl mx-auto">
+        <div className="flex flex-col gap-6">
             {isEditing && initialData && (
                 <Card>
                     <CardHeader>
@@ -153,7 +153,7 @@ export function TeacherForm({ initialData }: TeacherFormProps) {
                                 )}
                             />
 
-                            <div className="flex justify-end gap-4">
+                            <div className="flex justify-end gap-4 sm:flex-row flex-col">
                                 <Button type="button" variant="outline" onClick={() => router.back()}>
                                     Cancel
                                 </Button>

@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import Tesseract from 'tesseract.js';
-
+import { features } from 'process';
+import { performOCR } from "@/app/actions/ocr";
 export interface StudentData {
     name: string;
     rollNo: string;
@@ -257,6 +258,214 @@ export async function processResultExcel(file: File): Promise<ResultData[]> {
 /**
  * Process image file using OCR and extract result data (rollNo and marks)
  */
+// export async function processResultImage(
+//     file: File,
+//     onProgress?: (progress: number) => void
+// ): Promise<ResultData[]> {
+//     return new Promise((resolve, reject) => {
+//         const reader = new FileReader();
+
+//         // reader.onload = async (e) => {
+//         //     try {
+//         //         const imageData = e.target?.result as string;
+
+//         //         // Perform OCR
+//         //         const result = await Tesseract.recognize(
+//         //             imageData,
+//         //             'eng',
+//         //             {
+//         //                 logger: (m) => {
+//         //                     if (m.status === 'recognizing text' && onProgress) {
+//         //                         onProgress(Math.round(m.progress * 100));
+//         //                     }
+//         //                 },
+//         //             }
+//         //         );
+
+//         //         const text = result.data.text;
+//         //         console.log('OCR Result Text:', text);
+//         //         console.log('OCR Result Data:', result);
+
+
+//         //         // Parse the text to extract result data
+//         //         const lines = text.split('\n').filter(line => line.trim());
+//         //         const results: ResultData[] = [];
+
+//         //         for (const line of lines) {
+//         //             // Try different separators
+//         //             let parts: string[] = [];
+//         //             if (line.includes('|')) {
+//         //                 parts = line.split('|');
+//         //             } else if (line.includes(',')) {
+//         //                 parts = line.split(',');
+//         //             } else if (line.includes('\t')) {
+//         //                 parts = line.split('\t');
+//         //             } else {
+//         //                 parts = line.split(/\s{2,}/);
+//         //             }
+
+//         //             if (parts.length >= 2) {
+//         //                 const rollNo = parts[0].trim();
+//         //                 const marks = parseFloat(parts[1].trim());
+
+//         //                 // Basic validation
+//         //                 if (rollNo && !isNaN(marks)) {
+//         //                     results.push({ rollNo, marks });
+//         //                 }
+//         //             }
+//         //         }
+
+//         //         if (results.length === 0) {
+//         //             reject(new Error('No valid result data found in image. Please ensure the image contains a clear table with Roll No and Marks columns.'));
+//         //         } else {
+//         //             resolve(results);
+//         //         }
+//         //     } catch (error) {
+//         //         reject(new Error('Failed to process result image: ' + (error as Error).message));
+//         //     }
+//         // };
+//         // reader.onerror = () => reject(new Error('Failed to read image file'));
+//         // reader.readAsDataURL(file);
+
+//         reader.onload = async (e) =>{
+//             try {
+//                 // 1. Prepare the image (stripe the "data:image/jpeg;hase64," prefix)
+//                 const base64Image = (e.target?.result as string).split(",")[1];
+
+//                 // 2. call google vision api
+//                 if(onProgress) onProgress(50);
+//                 console.log('Calling Google Vision API',process.env.NEXT_PUBLIC_GOOGLE_VISION_API_KEY);
+//                 const response = await fetch(
+//                     `https://vision.googleapis.com/v1/images:annotate?key=${process.env.NEXT_PUBLIC_GOOGLE_VISION_API_KEY}`,
+//                     {
+//                         method: 'POST',
+//                         body: JSON.stringify({
+//                             requests:[
+//                                 {
+//                                     image:{content:base64Image},
+//                                     features:[{type:'TEXT_DETECTION'}]
+//                                 }
+//                             ]
+//                         })
+//                     },
+//                 );
+//                 const data = await response.json();
+//                 const fullText = data.responses[0].fullTextAnnotation?.text || "";
+                
+//                 if (onProgress) onProgress(100);
+
+//                 // 3. Parse the text (Refined logic for handwriting)
+//                 const lines = fullText.split('\n').filter((l: string) => l.trim());
+//                 const results: ResultData[] = [];
+
+//                 for (const line of lines) {
+//                     // This regex looks for: [Any Chars] [Roll No Number] [Space/Symbol] [Marks Number]
+//                     const matches = line.match(/(\d{3,})\s*[:|-]?\s*(\d{1,3})/);
+                    
+//                     if (matches) {
+//                         results.push({
+//                             rollNo: matches[1],
+//                             marks: parseFloat(matches[2])
+//                         });
+//                     }
+//                 }
+
+//                 if (results.length === 0) {
+//                     reject(new Error('No valid data found. Google saw: ' + fullText.substring(0, 50) + '...'));
+//                 } else {
+//                     resolve(results);
+//                 }
+//             } catch (error) {
+//                 reject(new Error('Vision API Error: ' + (error as Error).message));
+//             }
+//         }
+//         reader.readAsDataURL(file);
+//     });
+// }
+
+// google vision api version
+// export async function processResultImage(
+//     file: File,
+//     onProgress?: (progress: number) => void
+// ): Promise<ResultData[]> {
+//     return new Promise((resolve, reject) => {
+//         const reader = new FileReader();
+
+//         reader.onload = async (e) => {
+//             try {
+//                 const base64Image = (e.target?.result as string).split(",")[1];
+
+//                 if (onProgress) onProgress(30);
+
+//                 // IMPORTANT: Ensure there are NO single quotes around the key string
+//                 const apiKey = "AIzaSyB0KhSxSk82EbfYRFvH3R3AVBSVPCGQuL4"; 
+                
+//                 const response = await fetch(
+//                     `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
+//                     {
+//                         method: 'POST',
+//                         headers: { 'Content-Type': 'application/json' },
+//                         body: JSON.stringify({
+//                             requests: [
+//                                 {
+//                                     image: { content: base64Image },
+//                                     features: [{ type: 'DOCUMENT_TEXT_DETECTION' }] // Use DOCUMENT_TEXT for better handwriting results
+//                                 }
+//                             ]
+//                         })
+//                     }
+//                 );
+
+//                 const data = await response.json();
+
+//                 // 1. Check if the API returned an error (like Billing not enabled)
+//                 if (data.error) {
+//                     throw new Error(`Google API Error: ${data.error.message}`);
+//                 }
+
+//                 // 2. Safely check if responses exist before accessing [0]
+//                 if (!data.responses || !data.responses[0]) {
+//                     throw new Error("No response received from Google Vision.");
+//                 }
+
+//                 const fullText = data.responses[0].fullTextAnnotation?.text || "";
+//                 console.log("Full OCR Text:", fullText);
+
+//                 if (onProgress) onProgress(100);
+
+//                 // 3. Robust parsing for your handwritten image
+//                 const lines = fullText.split('\n').filter((l: string) => l.trim());
+//                 const results: ResultData[] = [];
+
+//                 for (const line of lines) {
+//                     // This matches a Roll No (3+ digits) and Marks (1-3 digits) 
+//                     // even if there is messy handwriting/symbols between them
+//                     const matches = line.match(/(\d{3,})[\s\W]+(\d{1,3})/);
+                    
+//                     if (matches) {
+//                         results.push({
+//                             rollNo: matches[1],
+//                             marks: parseFloat(matches[2])
+//                         });
+//                     }
+//                 }
+
+//                 if (results.length === 0) {
+//                     reject(new Error("Could not find Roll No and Marks pattern in image."));
+//                 } else {
+//                     resolve(results);
+//                 }
+//             } catch (error) {
+//                 reject(new Error('Process Error: ' + (error as Error).message));
+//             }
+//         };
+
+//         reader.onerror = () => reject(new Error('Failed to read image file'));
+//         reader.readAsDataURL(file);
+//     });
+// }
+
+// hugging face api
 export async function processResultImage(
     file: File,
     onProgress?: (progress: number) => void
@@ -266,62 +475,63 @@ export async function processResultImage(
 
         reader.onload = async (e) => {
             try {
-                const imageData = e.target?.result as string;
+                // 1. Convert file to Base64 to send to our Server Action
+                const base64Image = (e.target?.result as string).split(",")[1];
 
-                // Perform OCR
-                const result = await Tesseract.recognize(
-                    imageData,
-                    'eng',
-                    {
-                        logger: (m) => {
-                            if (m.status === 'recognizing text' && onProgress) {
-                                onProgress(Math.round(m.progress * 100));
-                            }
-                        },
-                    }
-                );
+                if (onProgress) onProgress(40);
 
-                const text = result.data.text;
+                // 2. Call the Server Action
+                const response = await performOCR(base64Image);
 
-                // Parse the text to extract result data
-                const lines = text.split('\n').filter(line => line.trim());
+                // 3. Handle the "Model Loading" state
+                if (response.error === "loading") {
+                    reject(new Error(`Model is waking up. Please wait ${Math.round(response.wait || 20)}s and try again.`));
+                    return;
+                }
+
+                if (response.error || !response.data) {
+                    throw new Error(response.error || "Failed to extract text from image.");
+                }
+
+                const fullText = response.data;
+                console.log("OCR Result from Server:", fullText);
+
+                if (onProgress) onProgress(100);
+
+                // 4. Parsing Logic (Extracting Roll No and Marks)
                 const results: ResultData[] = [];
+                // Look for all sequences of digits
+                const numbers = fullText.match(/\d+/g); 
 
-                for (const line of lines) {
-                    // Try different separators
-                    let parts: string[] = [];
-                    if (line.includes('|')) {
-                        parts = line.split('|');
-                    } else if (line.includes(',')) {
-                        parts = line.split(',');
-                    } else if (line.includes('\t')) {
-                        parts = line.split('\t');
-                    } else {
-                        parts = line.split(/\s{2,}/);
-                    }
+                if (numbers && numbers.length >= 2) {
+                    // We assume pairs: [RollNo1, Marks1, RollNo2, Marks2...]
+                    for (let i = 0; i < numbers.length; i += 2) {
+                        const rollNo = numbers[i];
+                        const marks = numbers[i+1];
 
-                    if (parts.length >= 2) {
-                        const rollNo = parts[0].trim();
-                        const marks = parseFloat(parts[1].trim());
-
-                        // Basic validation
-                        if (rollNo && !isNaN(marks)) {
-                            results.push({ rollNo, marks });
+                        if (rollNo && marks) {
+                            results.push({
+                                rollNo: rollNo.trim(),
+                                marks: parseFloat(marks)
+                            });
                         }
                     }
                 }
 
                 if (results.length === 0) {
-                    reject(new Error('No valid result data found in image. Please ensure the image contains a clear table with Roll No and Marks columns.'));
+                    reject(new Error(`No numbers found in the image. The AI saw: "${fullText}"`));
                 } else {
                     resolve(results);
                 }
+
             } catch (error) {
-                reject(new Error('Failed to process result image: ' + (error as Error).message));
+                reject(new Error("OCR Processing Error: " + (error as Error).message));
             }
         };
 
-        reader.onerror = () => reject(new Error('Failed to read image file'));
+        reader.onerror = () => reject(new Error("Failed to read image file"));
+        
+        // Use readAsDataURL so we can easily get the Base64 string
         reader.readAsDataURL(file);
     });
 }
@@ -347,7 +557,8 @@ export async function processResultFile(
     ) {
         return processResultExcel(file);
     } else if (fileType.startsWith('image/')) {
-        return processResultImage(file, onProgress);
+        // return processResultImage(file, onProgress);
+        throw new Error('Result image processing is currently disabled. Please upload a CSV or Excel file.');
     } else {
         throw new Error('Unsupported file type. Please upload a CSV, Excel, or image file.');
     }
