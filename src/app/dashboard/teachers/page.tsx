@@ -15,6 +15,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import AccessDeniedPage from "@/app/access-denied/page";
 import { redirect } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function TeachersPage() {
   const session = await auth.api.getSession({
@@ -25,8 +26,8 @@ export default async function TeachersPage() {
     redirect("/sign-in");
   }
 
-  // Check for admin role. 
-  // Note: session.user.role might need type extension in better-auth, 
+  // Check for admin role.
+  // Note: session.user.role might need type extension in better-auth,
   // but if it's in DB, better-auth usually returns it if configured.
   // Assuming role is available on user object.
   // If strict type checking fails, I might need to cast or fetch user from DB.
@@ -60,8 +61,13 @@ export default async function TeachersPage() {
         <TeachersChart />
       </div>
 
+     
       <div className="md:grid-cols-1">
-        <TeachersTable />
+        <Card>
+          <CardContent>
+            <TeachersTable />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -1,13 +1,11 @@
 "use client";
 
 import {
-  BarChart,
   GraduationCap,
   LogOut,
   Users,
   UserSquare2,
   User,
-  Upload,
   Plus,
   ClipboardClock,
 } from "lucide-react";
@@ -27,11 +25,12 @@ import {
 import { signOut, useSession } from "@/lib/auth-client";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
+import { ThemeToogle } from "./theme-toogle-button";
 
 // Menu items.
 const adminItems = [
-   {
+  {
     title: "Profile",
     url: "/dashboard/profile",
     icon: User,
@@ -90,6 +89,9 @@ export function AppSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { data: session, isPending } = useSession();
+  console.log("Session in sidebar:", session);
+
+  const userRole = (session?.user as any)?.role;
 
   const handleLogout = async () => {
     await signOut({
@@ -105,20 +107,6 @@ export function AppSidebar() {
   const items =
     (session?.user as any)?.role === "TEACHER" ? teacherItems : adminItems;
 
-  if (isPending) {
-    return (
-      <Sidebar>
-        <SidebarContent>
-          <div className="p-4 space-y-4">
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-full" />
-          </div>
-        </SidebarContent>
-      </Sidebar>
-    );
-  }
-
   return (
     <Sidebar className="">
       <SidebarHeader>
@@ -133,33 +121,42 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
+        <SidebarGroup className="px-5">
           <SidebarGroupLabel className="text-lg">Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={pathname === item.url}>
-                    <a href={item.url} className="">
-                      <item.icon />
-                      <span className="p-2">{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {userRole === "ADMIN" &&
+                adminItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={pathname === item.url}>
+                      <Link href={item.url} className="">
+                        <item.icon />
+                        <span className="p-2">{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              {userRole === "TEACHER" &&
+                teacherItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={pathname === item.url}>
+                      <Link href={item.url} className="">
+                        <item.icon />
+                        <span className="p-2">{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={handleLogout}
-              className="text-accent-foreground hover:text-accent-foreground hover:bg-accent"
-            >
+          <SidebarMenuItem className="px-5 mb-5">
+            <SidebarMenuButton onClick={handleLogout} className="border">
               <LogOut />
-              <span className="p-2">Logout</span>
+              <span className="p-1">Logout</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
