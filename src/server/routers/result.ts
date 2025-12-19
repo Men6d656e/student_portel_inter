@@ -124,46 +124,92 @@ export const resultRouter = router({
       };
     }),
 
-  getById: staffProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const result = await ctx.db.result.findUnique({
-        where: { id: input.id },
-        include: {
-          uploadedBy: {
-            select: {
-              name: true,
-              email: true,
-              role: true,
+    getById: staffProcedure
+  .input(z.object({ id: z.string() }))
+  .query(async ({ ctx, input }) => {
+    // Add this log to debug
+    console.log('Fetching result with ID:', input.id);
+    
+    const result = await ctx.db.result.findUnique({
+      where: { id: input.id },
+      include: {
+        uploadedBy: {
+          select: {
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
+        studentResults: {
+          include: {
+            student: {
+              select: {
+                name: true,
+                rollNo: true,
+              },
             },
           },
-          studentResults: {
-            include: {
-              student: {
-                select: {
-                  name: true,
-                  rollNo: true,
-                },
-              },
-            },
-            orderBy: {
-              student: {
-                rollNo: "asc",
-              },
+          orderBy: {
+            student: {
+              rollNo: "asc",
             },
           },
         },
+      },
+    });
+
+    // Add this log to see what's being returned
+    console.log('Found result:', result?.subject, 'with', result?.studentResults.length, 'students');
+
+    if (!result) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Result not found",
       });
+    }
 
-      if (!result) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Result not found",
-        });
-      }
+    return result;
+  }),
+  // getById: staffProcedure
+  //   .input(z.object({ id: z.string() }))
+  //   .query(async ({ ctx, input }) => {
+  //     const result = await ctx.db.result.findUnique({
+  //       where: { id: input.id },
+  //       include: {
+  //         uploadedBy: {
+  //           select: {
+  //             name: true,
+  //             email: true,
+  //             role: true,
+  //           },
+  //         },
+  //         studentResults: {
+  //           include: {
+  //             student: {
+  //               select: {
+  //                 name: true,
+  //                 rollNo: true,
+  //               },
+  //             },
+  //           },
+  //           orderBy: {
+  //             student: {
+  //               rollNo: "asc",
+  //             },
+  //           },
+  //         },
+  //       },
+  //     });
 
-      return result;
-    }),
+  //     if (!result) {
+  //       throw new TRPCError({
+  //         code: "NOT_FOUND",
+  //         message: "Result not found",
+  //       });
+  //     }
+
+  //     return result;
+  //   }),
 
   create: staffProcedure
     .input(
@@ -184,6 +230,17 @@ export const resultRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { studentResults, ...resultData } = input;
+
+      const ApprovedTeacher = await ctx.db.user.findUnique({
+        where: { id: ctx.user.id },
+      });
+
+      if (!ApprovedTeacher || !ApprovedTeacher.isApproved) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You are not authorized to upload results.",
+        });
+      }
 
       // Validate that all students exist
       const students = await ctx.db.student.findMany({

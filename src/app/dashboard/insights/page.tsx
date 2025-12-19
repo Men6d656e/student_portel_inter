@@ -1,78 +1,114 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
-import { 
-  PieChart, Pie, Cell, ResponsiveContainer, Tooltip, 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid 
-} from "recharts";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { Loader2 } from "lucide-react";
+
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 
 export default function PerformanceHub() {
   const [selectedResultId, setSelectedResultId] = useState<string>("");
+  const [renderKey, setRenderKey] = useState<number>(0);
 
-  // 1. Fetch all results uploaded by this teacher
   const { data: uploads } = trpc.uploadedResults.getMyUploads.useQuery({});
 
-  // 2. Fetch the specific details for the selected result
-  const { data: resultDetails, isLoading } = trpc.result.getById.useQuery(
+  const { data: resultDetails, isFetching, refetch } = trpc.result.getById.useQuery(
     { id: selectedResultId },
-    { enabled: !!selectedResultId }
+    {
+      enabled: !!selectedResultId,
+      refetchOnMount: true,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      staleTime: 0,
+      gcTime: 0,
+    }
   );
 
-  // 3. Process data for the Donut Chart (Pass/Fail)
- const stats = useMemo(() => {
-  // Provide clear defaults so chartData is NEVER undefined
-  const defaultStats = { 
-    pass: 0, 
-    fail: 0, 
-    avg: "0", 
-    chartData: [
-      { name: "Pass", value: 0, color: "var(--primary)" },
-      { name: "Fail", value: 0, color: "var(--destructive)" }
-    ] 
-  };
+  // Force component remount when selection changes or data arrives
+  useEffect(() => {
+    if (selectedResultId) {
+      setRenderKey(prev => prev + 1);
+      refetch();
+    }
+  }, [selectedResultId, refetch]);
 
-  if (!resultDetails || !resultDetails.studentResults) return defaultStats;
-  
-  const total = resultDetails.studentResults.length;
-  if (total === 0) return defaultStats;
+  // Also update key when new data arrives
+  useEffect(() => {
+    if (resultDetails && !isFetching) {
+      setRenderKey(prev => prev + 1);
+    }
+  }, [resultDetails, isFetching]);
 
-  const passThreshold = resultDetails.totalMarks * 0.33;
-  const pass = resultDetails.studentResults.filter(r => r.obtainedMarks >= passThreshold).length;
-  const fail = total - pass;
-  const avg = resultDetails.studentResults.reduce((acc, curr) => acc + curr.obtainedMarks, 0) / total;
+  /* ---------------- ANALYTICS ---------------- */
 
-  return {
-    pass,
-    fail,
-    avg: avg.toFixed(1),
-    chartData: [
-      { name: "Pass", value: pass, color: "var(--primary)" },
-      { name: "Fail", value: fail, color: "var(--destructive)" }
-    ]
-  };
-}, [resultDetails]);
+  const stats = useMemo(() => {
+    if (!resultDetails?.studentResults?.length) {
+      return {
+        total: 0,
+        pass: 0,
+        fail: 0,
+        avg: 0,
+        chartData: [],
+        topStudents: [],
+      };
+    }
+
+    const totalMarks = resultDetails.totalMarks;
+    const passThreshold = totalMarks * 0.33;
+    const results = resultDetails.studentResults;
+
+    const pass = results.filter((r) => r.obtainedMarks >= passThreshold).length;
+    const fail = results.length - pass;
+    const avg = results.reduce((a, b) => a + b.obtainedMarks, 0) / results.length;
+
+    return {
+      total: results.length,
+      pass,
+      fail,
+      avg: Number(avg.toFixed(1)),
+      chartData: [
+        { name: "Pass", value: pass, color: "var(--chart-1)" },
+        { name: "Fail", value: fail, color: "var(--destructive)" },
+      ],
+      topStudents: [...results]
+        .sort((a, b) => b.obtainedMarks - a.obtainedMarks)
+        .slice(0, 5),
+    };
+  }, [resultDetails]);
+
+  /* ---------------- UI ---------------- */
 
   return (
     <div className="p-8 space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Insights</h1>
-          <p className="text-muted-foreground">Track Your Class Performance</p>
+          <h1 className="text-3xl font-bold">Insights</h1>
+          <p className="text-muted-foreground">Class performance overview</p>
         </div>
 
-        {/* The Result Selector */}
-        <Select onValueChange={setSelectedResultId}>
-          <SelectTrigger className="w-[300px]">
-            <SelectValue placeholder="Select a result to analyze" />
+        <Select value={selectedResultId} onValueChange={setSelectedResultId}>
+          <SelectTrigger className="w-[320px]">
+            <SelectValue placeholder="Select result" />
           </SelectTrigger>
           <SelectContent>
             {uploads?.map((u) => (
               <SelectItem key={u.id} value={u.id}>
-                {u.subject} - {u.resultType} ({u.class})
+                {u.subject} • {u.resultType} • {u.class}
               </SelectItem>
             ))}
           </SelectContent>
@@ -80,83 +116,119 @@ export default function PerformanceHub() {
       </div>
 
       {!selectedResultId ? (
-        <Card className="flex flex-col items-center justify-center h-[400px] border-dashed">
-          <p className="text-muted-foreground">Select a result from the dropdown to view performance metrics.</p>
+        <Card className="h-[360px] flex items-center justify-center border-dashed text-muted-foreground">
+          Select a result to view analytics
         </Card>
-      ) : (
-        <div className="space-y-6">
-          {/* Top Row: Quick Stats */}
+      ) : isFetching ? (
+        <div key={`loading-${renderKey}`} className="h-[400px] flex flex-col items-center justify-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Fetching fresh data...</p>
+        </div>
+      ) : resultDetails ? (
+        <div 
+          key={`content-${renderKey}`}
+          className="space-y-6 animate-in fade-in duration-500"
+        >
+          {/* Debug info - remove after fixing */}
+          <div className="text-xs text-muted-foreground mb-2">
+            Showing: {resultDetails.subject} • ID: {resultDetails.id.slice(-6)}
+          </div>
+
+          {/* KPI CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm">Average Score</CardTitle></CardHeader>
-              <CardContent><div className="text-2xl font-bold">{stats.avg} / {resultDetails?.totalMarks}</div></CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm">Passing Rate</CardTitle></CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-primary">
-                  {((stats.pass / (stats.pass + stats.fail)) * 100).toFixed(0)}%
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm">Total Students</CardTitle></CardHeader>
-              <CardContent><div className="text-2xl font-bold">{stats.pass + stats.fail}</div></CardContent>
-            </Card>
+            <StatCard title="Average Score">
+              {stats.avg} / {resultDetails.totalMarks}
+            </StatCard>
+
+            <StatCard title="Pass Percentage">
+              {stats.total ? Math.round((stats.pass / stats.total) * 100) : 0}%
+            </StatCard>
+
+            <StatCard title="Total Students">{stats.total}</StatCard>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Donut Chart: Pass/Fail */}
+            {/* PIE CHART */}
             <Card>
               <CardHeader>
-                <CardTitle>Pass vs Fail Ratio</CardTitle>
-                <CardDescription>Based on 33% passing marks</CardDescription>
+                <CardTitle>Pass vs Fail</CardTitle>
+                <CardDescription>Based on 33% passing criteria</CardDescription>
               </CardHeader>
-              <CardContent className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={stats.chartData}
-                      innerRadius={70}
-                      outerRadius={90}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {stats && stats.chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+              <CardContent className="h-[280px]">
+                {stats.chartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart key={renderKey}>
+                      <Pie
+                        data={stats.chartData}
+                        dataKey="value"
+                        innerRadius={70}
+                        outerRadius={95}
+                        paddingAngle={3}
+                        stroke="transparent"
+                        startAngle={90}
+                        endAngle={-270}
+                        animationDuration={1000}
+                      >
+                        {stats.chartData.map((d, i) => (
+                          <Cell key={`cell-${i}`} fill={d.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    No data available
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Top Students List */}
+            {/* TOP STUDENTS */}
             <Card>
-              <CardHeader><CardTitle>Top Performers</CardTitle></CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {resultDetails?.studentResults
-                    .sort((a, b) => b.obtainedMarks - a.obtainedMarks)
-                    .slice(0, 5)
-                    .map((sr) => (
-                      <div key={sr.id} className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">{sr.student.name}</p>
-                          <p className="text-xs text-muted-foreground">{sr.student.rollNo}</p>
-                        </div>
-                        <Badge variant="secondary" className="text-primary font-bold">
-                          {sr.obtainedMarks}
-                        </Badge>
+              <CardHeader>
+                <CardTitle>Top Performers</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {stats.topStudents.length > 0 ? (
+                  stats.topStudents.map((sr) => (
+                    <div key={`${sr.id}-${renderKey}`} className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium">{sr.student.name}</p>
+                        <p className="text-xs text-muted-foreground">{sr.student.rollNo}</p>
                       </div>
-                    ))}
-                </div>
+                      <Badge variant="secondary">{sr.obtainedMarks}</Badge>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">
+                    No students found
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
+  );
+}
+
+/* ---------------- HELPERS ---------------- */
+
+function StatCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{children}</div>
+      </CardContent>
+    </Card>
   );
 }

@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { Eye, EyeOff, GraduationCap, Loader } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Eye, EyeOff, GraduationCap, Loader } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -17,13 +17,20 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { signUp } from "@/lib/auth-client"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertTriangle } from "lucide-react"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { signUp } from "@/lib/auth-client";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -36,12 +43,12 @@ const formSchema = z.object({
     message: "Password must be at least 6 characters.",
   }),
   isTeacher: z.boolean().default(false),
-})
+});
 
 export default function SignUpPage() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,10 +57,10 @@ export default function SignUpPage() {
       email: "",
       password: "",
     },
-  })
+  });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setLoading(true)
+    setLoading(true);
     await signUp.email({
       email: values.email,
       password: values.password,
@@ -68,18 +75,18 @@ export default function SignUpPage() {
       ...(values.isTeacher ? { isApproved: false } : {}),
       fetchOptions: {
         onError: (ctx) => {
-          setLoading(false)
-          console.log(ctx)
+          setLoading(false);
+          console.log(ctx);
 
-          toast.error(ctx.error.message)
+          toast.error(ctx.error.message);
         },
         onSuccess: async () => {
-          toast.success("Account created successfully")
-          router.push("/sign-in")
-        }
-      }
-    })
-    setLoading(false)
+          toast.success("Account created successfully");
+          router.push("/sign-in");
+        },
+      },
+    });
+    setLoading(false);
   }
 
   return (
@@ -96,9 +103,13 @@ export default function SignUpPage() {
             <GraduationCap className="w-10 h-10 text-primary" />
           </div>
           {/* App Name */}
-          <CardTitle className="text-xl font-bold">Result Management System</CardTitle>
+          <CardTitle className="text-xl font-bold">
+            Result Management System
+          </CardTitle>
           {/* Welcome Text */}
-          <CardDescription className="text-lg font-medium pt-2">Create an account</CardDescription>
+          <CardDescription className="text-lg font-medium pt-2">
+            Create an account
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -177,9 +188,7 @@ export default function SignUpPage() {
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        I am a Teacher
-                      </FormLabel>
+                      <FormLabel>I am a Teacher</FormLabel>
                       <p className="text-sm text-muted-foreground">
                         Select this only if you are a faculty member.
                       </p>
@@ -189,11 +198,13 @@ export default function SignUpPage() {
               />
 
               {form.watch("isTeacher") && (
-                <Alert variant="destructive">
+                <Alert variant="default">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertTitle>Warning</AlertTitle>
                   <AlertDescription>
-                    Teacher accounts require manual verification by an administrator. You will not have access to teacher features until approved.
+                    Teacher accounts require manual verification by an
+                    administrator. You will not have access to teacher features
+                    until approved.
                   </AlertDescription>
                 </Alert>
               )}
@@ -208,7 +219,10 @@ export default function SignUpPage() {
         <CardFooter className="flex justify-center text-sm text-muted-foreground">
           <p>
             Already have an account?{" "}
-            <Link href="/sign-in" className="text-primary hover:underline font-medium">
+            <Link
+              href="/sign-in"
+              className="text-primary hover:underline font-medium"
+            >
               Sign in
             </Link>
           </p>
@@ -220,5 +234,5 @@ export default function SignUpPage() {
         Effortless result management system for intermediate students
       </p>
     </div>
-  )
+  );
 }
