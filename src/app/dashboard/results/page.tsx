@@ -41,6 +41,7 @@ import {
   BookOpen,
   GraduationCap,
   Eye,
+  Trophy,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useSession } from "@/lib/auth-client";
@@ -131,19 +132,19 @@ export default function ResultsPage() {
   const totalPages = resultsData?.totalPages || 1;
 
   return (
-    <div className="space-y-6 p-8">
-      <div className="flex sm:items-center sm:justify-between  sm:flex-row flex-col gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Results</h1>
+    <div className="space-y-8 p-8 max-w-7xl mx-auto w-full animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight">Results Management</h1>
           <p className="text-muted-foreground">
-            Manage student results and uploads
+            Monitor examination results and faculty upload activity.
           </p>
         </div>
-        <div className="">
-          <Button asChild className="w-full">
+        <div className="flex items-center space-x-2">
+          <Button asChild className="shadow-lg shadow-primary/20 transition-all hover:scale-105">
             <Link href="/dashboard/upload-result">
               <Plus className="mr-2 h-4 w-4" />
-              Upload Result
+              Upload New Result
             </Link>
           </Button>
         </div>
@@ -151,8 +152,8 @@ export default function ResultsPage() {
 
       {/* Analytics Cards */}
       {!statsData ? (
-        <div className="grid gap-4 md:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
+        <div className="grid gap-4 md:grid-cols-5">
+          {[...Array(5)].map((_, i) => (
             <Card key={i} className="flex flex-col justify-between h-[120px]">
               <CardContent className="flex h-full items-center justify-center">
                 <Loader className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -161,66 +162,73 @@ export default function ResultsPage() {
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-4 ">
-          <Card>
+        <div className="grid gap-4 md:grid-cols-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <Card className="bg-primary/5 border-primary/20 transition-all hover:bg-primary/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Total Results
               </CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <FileText className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{statsData.total}</div>
+              <p className="text-xs text-muted-foreground mt-1">Stored records</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="transition-all hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Final Test
+              </CardTitle>
+              <Trophy className="h-4 w-4 text-yellow-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{statsData.decemberTest}</div>
+              <p className="text-xs text-muted-foreground mt-1">Annual exams</p>
+            </CardContent>
+          </Card>
+          <Card className="transition-all hover:shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 December Test
               </CardTitle>
-              <ClipboardList className="h-4 w-4 text-muted-foreground" />
+              <ClipboardList className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{statsData.decemberTest}</div>
+              <p className="text-xs text-muted-foreground mt-1">Mid-session</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="transition-all hover:shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Mid Term</CardTitle>
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
+              <BookOpen className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{statsData.midTerm}</div>
+              <p className="text-xs text-muted-foreground mt-1">Internal tests</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="transition-all hover:shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Other</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <ClipboardList className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{statsData.other}</div>
+              <p className="text-xs text-muted-foreground mt-1">Misc uploads</p>
             </CardContent>
           </Card>
         </div>
       )}
 
       {/* Results Table */}
-      <Card>
-        <CardHeader>
+      <Card className="border-none shadow-xl bg-card/50 backdrop-blur-sm overflow-hidden">
+        <CardHeader className="pb-4">
           <div>
-            <CardTitle>All Results</CardTitle>
-            <CardDescription>View and manage uploaded results</CardDescription>
+            <CardTitle>Academic Records</CardTitle>
+            <CardDescription>Comprehensive list of uploaded examination data.</CardDescription>
           </div>
-          {/* <div className="relative w-64">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search results..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div> */}
         </CardHeader>
         <CardContent>
           <Tabs value={resultTypeFilter} onValueChange={handleTabChange}>

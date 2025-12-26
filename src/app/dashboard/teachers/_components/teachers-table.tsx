@@ -36,9 +36,11 @@ import {
   ChevronRight,
   CircleCheck,
   BadgeAlert,
+  RefreshCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 
 export function TeachersTable() {
   const router = useRouter();
@@ -48,6 +50,7 @@ export function TeachersTable() {
     "ALL"
   );
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data, isLoading, refetch } = trpc.teacher.getAll.useQuery(
     {
@@ -92,7 +95,7 @@ export function TeachersTable() {
       },
     });
 
-  const handleApprovedTeacher = (id:string) => {
+  const handleApprovedTeacher = (id: string) => {
     if (id) {
       ApprovedTeacherIdentity.mutate({ id: id });
     }
@@ -108,7 +111,13 @@ export function TeachersTable() {
     setPage(1);
   };
 
-  if (isLoading && !data) {
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refetch();
+    setIsRefreshing(false);
+  };
+
+  if ((isLoading && !data) || isRefreshing) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -138,7 +147,7 @@ export function TeachersTable() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-6">
       <div className="flex items-center justify-between">
         <Tabs
           defaultValue="ALL"
@@ -151,14 +160,19 @@ export function TeachersTable() {
             <TabsTrigger value="UNVERIFIED">Unverified</TabsTrigger>
           </TabsList>
         </Tabs>
-        <div className="relative w-64">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search teachers..."
-            className="pl-8"
-            value={search}
-            onChange={handleSearch}
-          />
+        <div className="flex items-center gap-2">
+          <div className="relative w-64">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search teachers..."
+              className="pl-8"
+              value={search}
+              onChange={handleSearch}
+            />
+          </div>
+          <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isLoading || isRefreshing}>
+            <RefreshCcw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          </Button>
         </div>
       </div>
 
@@ -199,51 +213,60 @@ export function TeachersTable() {
                   </TableCell>
                   <TableCell>
                     {teacher.emailVerified ? (
-                      <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">
+                      <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
                         Verified
-                      </span>
+                      </Badge>
                     ) : (
-                      <span className="inline-flex items-center rounded-full border border-yellow-200 bg-yellow-50 px-2 py-0.5 text-xs font-semibold text-yellow-700">
+                      <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
                         Unverified
-                      </span>
+                      </Badge>
                     )}
                   </TableCell>
                   <TableCell>
-                    <div
-                      className={`${
-                        teacher.isApproved ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {teacher.isApproved ? <CircleCheck /> : <BadgeAlert />}
+                    {teacher.isApproved ? (
+                      <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20 flex w-fit items-center gap-1">
+                        <CircleCheck className="h-3 w-3" /> Approved
+                      </Badge>
+                    ) : (
+                      <Badge variant="destructive" className="bg-destructive/10 text-destructive hover:bg-destructive/20 border-destructive/20 flex w-fit items-center gap-1">
+                        <BadgeAlert className="h-3 w-3" /> Pending
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold">{teacher._count.uploadedResults}</span>
+                      <span className="text-xs text-muted-foreground italic">uploads</span>
                     </div>
                   </TableCell>
-                  <TableCell>{teacher._count.uploadedResults}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                        {
-                            !teacher.isApproved && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleApprovedTeacher(teacher.id)}
-                      >
-                        <CircleCheck className="mr-2 h-4 w-4" />
-                        Approved
-                      </Button>
-                            )
-                        }
-                      <Button variant="outline" size="sm" asChild>
+                      {
+                        !teacher.isApproved && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-500/20"
+                            onClick={() => handleApprovedTeacher(teacher.id)}
+                          >
+                            <CircleCheck className="mr-1 h-3 w-3" />
+                            Approve
+                          </Button>
+                        )
+                      }
+                      <Button variant="outline" size="sm" asChild className="hover:bg-primary/5 hover:text-primary border-primary/10">
                         <Link href={`/dashboard/teachers/${teacher.id}`}>
-                          <Pencil className="mr-2 h-4 w-4" />
+                          <Pencil className="mr-1 h-3 w-3" />
                           Edit
                         </Link>
                       </Button>
                       <Button
-                        variant="destructive"
+                        variant="ghost"
                         size="sm"
+                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => setDeleteId(teacher.id)}
                       >
-                        <Trash2 className="mr-2 h-4 w-4" />
+                        <Trash2 className="mr-1 h-3 w-3" />
                         Delete
                       </Button>
                     </div>

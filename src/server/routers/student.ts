@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { adminProcedure, router } from "../trpc";
+import { adminProcedure, router, staffProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 
 export const studentRouter = router({
@@ -35,6 +35,11 @@ export const studentRouter = router({
                     take: limit,
                     skip,
                     where,
+                    include: {
+                        _count: {
+                            select: { studentResults: true }
+                        }
+                    },
                     orderBy: { createdAt: "desc" },
                 }),
                 ctx.db.student.count({ where }),
@@ -54,6 +59,36 @@ export const studentRouter = router({
                 where: { id: input.id },
             });
         }),
+
+    getWithResults: staffProcedure
+        .input(z.object({ id: z.string() }))
+        .query(async ({ ctx, input }) => {
+            const student = await ctx.db.student.findUnique({
+                where: { id: input.id },
+                include: {
+                    studentResults: {
+                        include: {
+                            result: true,
+                        },
+                        orderBy: {
+                            result: {
+                                createdAt: "desc",
+                            },
+                        },
+                    },
+                },
+            });
+
+            if (!student) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Student not found",
+                });
+            }
+
+            return student;
+        }),
+
 
     create: adminProcedure
         .input(

@@ -36,10 +36,9 @@ export function DashboardHeader() {
     });
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-background px-4 sticky top-0 z-10">
+    <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-background px-4 sticky top-0 z-10 transition-all duration-300">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mr-2 h-4" />
       </div>
       <div className="flex items-center gap-4">
         <div
@@ -47,18 +46,19 @@ export function DashboardHeader() {
           onClick={() => router.push("/dashboard/approvel")}
         >
           {teachersNeedAprovel && teachersNeedAprovel.length > 0 ? (
-            <Bell className="w-4 h-4 text-primary animate-bounce" />
+            <Bell className="w-5 h-5 text-primary animate-bounce" />
           ) : (
-            <Bell className="w-4 h-4" />
+            <Bell className="w-5 h-5 text-muted-foreground" />
           )}
         </div>
+        <ThemeToogle />
         <div className="flex items-center gap-2">
           <Avatar>
             {user && user.image && (
               <AvatarImage src={user?.image} alt={user?.name.charAt(0)} />
             )}
             <AvatarFallback className="text-xs uppercase">
-              {user?.name.charAt(0)}
+              {user?.name?.charAt(0)}
             </AvatarFallback>
           </Avatar>
         </div>
