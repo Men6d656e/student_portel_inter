@@ -124,52 +124,52 @@ export const resultRouter = router({
       };
     }),
 
-    getById: staffProcedure
-  .input(z.object({ id: z.string() }))
-  .query(async ({ ctx, input }) => {
-    // Add this log to debug
-    console.log('Fetching result with ID:', input.id);
-    
-    const result = await ctx.db.result.findUnique({
-      where: { id: input.id },
-      include: {
-        uploadedBy: {
-          select: {
-            name: true,
-            email: true,
-            role: true,
+  getById: staffProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      // Add this log to debug
+      console.log('Fetching result with ID:', input.id);
+
+      const result = await ctx.db.result.findUnique({
+        where: { id: input.id },
+        include: {
+          uploadedBy: {
+            select: {
+              name: true,
+              email: true,
+              role: true,
+            },
           },
-        },
-        studentResults: {
-          include: {
-            student: {
-              select: {
-                name: true,
-                rollNo: true,
+          studentResults: {
+            include: {
+              student: {
+                select: {
+                  name: true,
+                  rollNo: true,
+                },
+              },
+            },
+            orderBy: {
+              student: {
+                rollNo: "asc",
               },
             },
           },
-          orderBy: {
-            student: {
-              rollNo: "asc",
-            },
-          },
         },
-      },
-    });
-
-    // Add this log to see what's being returned
-    console.log('Found result:', result?.subject, 'with', result?.studentResults.length, 'students');
-
-    if (!result) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Result not found",
       });
-    }
 
-    return result;
-  }),
+      // Add this log to see what's being returned
+      console.log('Found result:', result?.subject, 'with', result?.studentResults.length, 'students');
+
+      if (!result) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Result not found",
+        });
+      }
+
+      return result;
+    }),
   // getById: staffProcedure
   //   .input(z.object({ id: z.string() }))
   //   .query(async ({ ctx, input }) => {
@@ -373,35 +373,124 @@ export const resultRouter = router({
     return { total, decemberTest: december, midTerm: mid, other };
   }),
   getDegreeComparison: staffProcedure
-  .input(z.object({ session: z.string() }))
-  .query(async ({ ctx, input }) => {
-    const results = await ctx.db.result.findMany({
-      where: { 
-        uploadedById: ctx.user.id,
-        session: input.session 
-      },
-      include: { studentResults: true },
-      orderBy: { createdAt: 'asc' }
-    });
+    .input(z.object({ session: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const results = await ctx.db.result.findMany({
+        where: {
+          uploadedById: ctx.user.id,
+          session: input.session
+        },
+        include: { studentResults: true },
+        orderBy: { createdAt: 'asc' }
+      });
 
-    // We group by ResultType (Mid Term, December, etc.) 
-    // and calculate the average for each degree category
-    const chartData = results.reduce((acc: any[], curr) => {
-      let dataPoint = acc.find(d => d.name === curr.resultType);
-      
-      if (!dataPoint) {
-        dataPoint = { name: curr.resultType };
-        acc.push(dataPoint);
+      // We group by ResultType (Mid Term, December, etc.) 
+      // and calculate the average for each degree category
+      const chartData = results.reduce((acc: any[], curr) => {
+        let dataPoint = acc.find(d => d.name === curr.resultType);
+
+        if (!dataPoint) {
+          dataPoint = { name: curr.resultType };
+          acc.push(dataPoint);
+        }
+
+        const avg = curr.studentResults.length > 0
+          ? curr.studentResults.reduce((s, r) => s + r.obtainedMarks, 0) / curr.studentResults.length
+          : 0;
+
+        dataPoint[curr.degree] = Number(avg.toFixed(1));
+        return acc;
+      }, []);
+
+      return chartData;
+    }),
+
+  searchStudentResults: staffProcedure
+    .input(
+      z.object({
+        rollNo: z.string().min(1),
+        session: z.string().min(1),
+        class: z.string().min(1),
+        degree: z.string().min(1),
+        resultType: z.union([resultTypeEnum, z.literal("ALL")]),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const where: any = {
+        student: {
+          rollNo: input.rollNo,
+        },
+        result: {
+          session: input.session,
+          class: input.class,
+          degree: input.degree,
+        },
+      };
+
+      // Only filter by result type if not ALL
+      if (input.resultType !== "ALL") {
+        where.result.resultType = input.resultType;
       }
 
-      const avg = curr.studentResults.length > 0 
-        ? curr.studentResults.reduce((s, r) => s + r.obtainedMarks, 0) / curr.studentResults.length
-        : 0;
+      // 1. Find the student results that match the criteria
+      const studentResults = await ctx.db.studentResult.findMany({
+        where,
+        include: {
+          result: {
+            select: {
+              subject: true,
+              totalMarks: true,
+              resultType: true,
+              session: true,
+            },
+          },
+          student: {
+            select: {
+              name: true,
+              rollNo: true,
+            },
+          },
+        },
+      });
 
-      dataPoint[curr.degree] = Number(avg.toFixed(1));
-      return acc;
-    }, []);
+      if (studentResults.length === 0) {
+        // Check if student exists at least
+        const student = await ctx.db.student.findUnique({
+          where: { rollNo: input.rollNo },
+        });
 
-    return chartData;
-  }),
+        if (!student) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Student not found with this Roll No.",
+          });
+        }
+
+        return []; // Student exists but no results for this criteria
+      }
+
+      // 2. Format the response
+      return studentResults.map((sr) => {
+        const percentage = (sr.obtainedMarks / sr.result.totalMarks) * 100;
+        let grade = "F";
+        if (percentage >= 80) grade = "A+";
+        else if (percentage >= 70) grade = "A";
+        else if (percentage >= 60) grade = "B";
+        else if (percentage >= 50) grade = "C";
+        else if (percentage >= 40) grade = "D";
+        else if (percentage >= 33) grade = "E";
+
+        return {
+          id: sr.id,
+          subject: sr.result.subject,
+          totalMarks: sr.result.totalMarks,
+          obtainedMarks: sr.obtainedMarks,
+          percentage: percentage.toFixed(2),
+          grade,
+          studentName: sr.student.name,
+          rollNo: sr.student.rollNo,
+          resultType: sr.result.resultType,
+        };
+      });
+    }),
 });

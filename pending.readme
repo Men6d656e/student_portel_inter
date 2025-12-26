@@ -1,0 +1,11 @@
+# Pending Analysis
+
+## Redundant Logic & Routes
+- **Manual User Fetching**: Ensure that we are utilizing `better-auth`'s `useSession` and `auth.api.getSession` (server-side) instead of manually querying the `User` table for current user details in TRPC procedures where `ctx.user` (populated by middleware) would suffice.
+- **Route Optimization**: Review `src/server/routers` to ensure that we are not duplicating logic that `better-auth` handles (e.g., verification status checks might be handled by middleware/hooks).
+- **Manual Routes**: If there are any `src/app/api/auth/[...all]/route.ts` or similar that are manually implemented, they should be fully managed by `better-auth`.
+- **General Cleanup**: Remove any unused variable imports or commented-out code blocks observed during development.
+
+## Recommendations
+- Use `ctx.session` or `ctx.user` in TRPC protected procedures instead of re-fetching user data.
+- Leverage `better-auth` hooks for side effects (like emails) if possible, though currently `teacher.create` does this manually which is acceptable for custom flows.

@@ -8,6 +8,7 @@ import {
   User,
   Plus,
   ClipboardClock,
+  Search,
 } from "lucide-react";
 
 import {
@@ -39,6 +40,11 @@ const adminItems = [
     title: "Upload",
     url: "/dashboard/upload-result",
     icon: Plus,
+  },
+  {
+    title: "Search Result",
+    url: "/dashboard/search-result",
+    icon: Search,
   },
   {
     title: "Teachers",
@@ -74,6 +80,11 @@ const teacherItems = [
     icon: Plus,
   },
   {
+    title: "Search Result",
+    url: "/dashboard/search-result",
+    icon: Search,
+  },
+  {
     title: "Results",
     url: "/dashboard/results",
     icon: GraduationCap,
@@ -89,8 +100,10 @@ export function AppSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { data: session, isPending } = useSession();
-  console.log("Session in sidebar:", session);
 
+  // Prevent hydration mismatch by returning skeleton or null until loaded, 
+  // but for sidebar we might want to just default to one or show nothing.
+  // Better: Use `userRole` derived safely.
   const userRole = (session?.user as any)?.role;
 
   const handleLogout = async () => {
@@ -104,8 +117,18 @@ export function AppSidebar() {
     });
   };
 
-  const items =
-    (session?.user as any)?.role === "TEACHER" ? teacherItems : adminItems;
+  if (isPending) {
+    return (
+      <Sidebar>
+        <SidebarHeader />
+        <SidebarContent>
+          <div className="flex items-center justify-center h-full">
+            {/* Optional: Add Loader here if desired, otherwise just empty sidebar structure */}
+          </div>
+        </SidebarContent>
+      </Sidebar>
+    )
+  }
 
   return (
     <Sidebar className="">

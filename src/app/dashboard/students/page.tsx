@@ -8,9 +8,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Search, Plus, Upload, Users, GraduationCap, School, Pencil, Trash2, ChevronLeft, ChevronRight, Loader } from "lucide-react"
+import { Search, Plus, Upload, Users, GraduationCap, School, Pencil, Trash2, ChevronLeft, ChevronRight, Loader, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {
@@ -195,17 +195,17 @@ export default function StudentsPage() {
   }
 
   return (
-    <div className="p-8 space-y-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
+    <div className="p-8 space-y-8 max-w-7xl mx-auto w-full animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight">Student Management</h1>
-          <p className="text-muted-foreground">Manage student records and enrollments.</p>
+          <p className="text-muted-foreground">Manage student records and monitor enrollment status.</p>
         </div>
         <div className="flex gap-2 sm:flex-row flex-col w-full sm:w-auto">
-          <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
+          <Button variant="outline" onClick={() => setUploadDialogOpen(true)} className="hover:bg-primary/5 border-primary/10">
             <Upload className="mr-2 h-4 w-4" /> Import Students
           </Button>
-          <Button asChild>
+          <Button asChild className="shadow-lg shadow-primary/20 transition-all hover:scale-105">
             <Link href="/dashboard/students/new">
               <Plus className="mr-2 h-4 w-4" /> Add New Student
             </Link>
@@ -225,177 +225,192 @@ export default function StudentsPage() {
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
+        <div className="grid gap-4 md:grid-cols-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <Card className="bg-primary/5 border-primary/20 transition-all hover:bg-primary/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <Users className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalStudents}</div>
+              <p className="text-xs text-muted-foreground mt-1">Enrolled students</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="transition-all hover:shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">1st Year Students</CardTitle>
-              <School className="h-4 w-4 text-muted-foreground" />
+              <School className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{firstYearCount}</div>
+              <p className="text-xs text-muted-foreground mt-1">Freshmen intake</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="transition-all hover:shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">2nd Year Students</CardTitle>
-              <GraduationCap className="h-4 w-4 text-muted-foreground" />
+              <GraduationCap className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{secondYearCount}</div>
+              <p className="text-xs text-muted-foreground mt-1">Senior students</p>
             </CardContent>
           </Card>
         </div>
       )}
 
       {/* Table with Tabs and Search */}
-      <div className="shadow-sm border rounded-lg p-6 bg-card text-card-foreground">
+      <Card className="border-none shadow-xl bg-card/50 backdrop-blur-sm overflow-hidden">
+        <CardHeader className="pb-4">
+          <CardTitle>Student Directory</CardTitle>
+          <CardDescription>Comprehensive list of enrolled students by grade and degree.</CardDescription>
+        </CardHeader>
+        <CardContent>
 
-      {isLoading && !studentsData ? (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Tabs defaultValue="ALL" className="w-[400px]">
-              <TabsList>
-                <TabsTrigger value="ALL">All Students</TabsTrigger>
-                <TabsTrigger value="1st Year">1st Year</TabsTrigger>
-                <TabsTrigger value="2nd Year">2nd Year</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <div className="relative w-64">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search students..."
-                className="pl-8"
-                value={searchQuery}
-                disabled
-              />
+          {isLoading && !studentsData ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Tabs defaultValue="ALL" className="w-[400px]">
+                  <TabsList>
+                    <TabsTrigger value="ALL">All Students</TabsTrigger>
+                    <TabsTrigger value="1st Year">1st Year</TabsTrigger>
+                    <TabsTrigger value="2nd Year">2nd Year</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                <div className="relative w-64">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search students..."
+                    className="pl-8"
+                    value={searchQuery}
+                    disabled
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-md border h-[500px] flex items-center justify-center">
+                <Loader className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex  sm:flex-row flex-col gap-4">
+                <div className="">
+                  <Tabs defaultValue="ALL" onValueChange={handleTabChange} className="w-full">
+                    <TabsList className="w-full">
+                      <TabsTrigger value="ALL">All Students</TabsTrigger>
+                      <TabsTrigger value="1st Year">1st Year</TabsTrigger>
+                      <TabsTrigger value="2nd Year">2nd Year</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+                <div className="relative sm:w-64 md:ml-auto w-full">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search students..."
+                    className="pl-8"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
 
-          <div className="rounded-md border h-[500px] flex items-center justify-center">
-            <Loader className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="flex  sm:flex-row flex-col gap-4">
-            <div className="">
-            <Tabs defaultValue="ALL" onValueChange={handleTabChange} className="w-full">
-              <TabsList className="w-full">
-                <TabsTrigger value="ALL">All Students</TabsTrigger>
-                <TabsTrigger value="1st Year">1st Year</TabsTrigger>
-                <TabsTrigger value="2nd Year">2nd Year</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            </div>
-            <div className="relative sm:w-64 md:ml-auto w-full">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search students..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
+              <div className="rounded-md border p-2">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Roll No</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Class</TableHead>
+                      <TableHead>Degree</TableHead>
+                      <TableHead>Session</TableHead>
+                      <TableHead>Results</TableHead>
 
-          <div className="rounded-md border p-2">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Roll No</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Degree</TableHead>
-                  <TableHead>Session</TableHead>
-                  <TableHead>Results</TableHead>
-
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {students.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      No students found.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  students.map((student) => (
-                    <TableRow key={student.id}>
-                      <TableCell className="font-medium">{student.rollNo}</TableCell>
-                      <TableCell>{student.name}</TableCell>
-                      <TableCell>{student.class}</TableCell>
-                      <TableCell>{student.degree}</TableCell>
-                      <TableCell>{student.session}</TableCell>
-                      <TableCell>
-                        <Button variant="link" size="sm" asChild>
-                          {/* TODO */}
-                          <Link href={`#`}>
-                            View Results
-                          </Link>
-                        </Button>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm" asChild>
-                            <Link href={`/dashboard/students/${student.id}`}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Edit
-                            </Link>
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => setDeleteId(student.id)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </Button>
-                        </div>
-                      </TableCell>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  </TableHeader>
+                  <TableBody>
+                    {students.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="h-24 text-center">
+                          No students found.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      students.map((student) => (
+                        <TableRow key={student.id}>
+                          <TableCell className="font-medium">{student.rollNo}</TableCell>
+                          <TableCell>{student.name}</TableCell>
+                          <TableCell>{student.class}</TableCell>
+                          <TableCell>{student.degree}</TableCell>
+                          <TableCell>{student.session}</TableCell>
+                          <TableCell>
+                            {student._count.studentResults > 0 ? (
+                              <Button variant="link" size="sm" asChild className="text-primary hover:text-primary/80 p-0 h-auto">
+                                <Link href={`/dashboard/students/${student.id}/results`}>
+                                  View Results
+                                </Link>
+                              </Button>
+                            ) : (
+                              <span className="text-xs text-muted-foreground italic flex items-center gap-1">
+                                <AlertCircle className="h-3 w-3" /> No Results
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button variant="outline" size="sm" asChild className="hover:bg-primary/5 hover:text-primary border-primary/10">
+                                <Link href={`/dashboard/students/${student.id}`}>
+                                  <Pencil className="mr-1 h-3 w-3" />
+                                  Edit
+                                </Link>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                onClick={() => setDeleteId(student.id)}
+                              >
+                                <Trash2 className="mr-1 h-3 w-3" />
+                                Delete
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
 
-          {/* Pagination */}
-          <div className="flex items-center sm:justify-end justify-center space-x-2 py-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1 || isLoading}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Page {page} of {studentsData?.totalPages || 1}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => p + 1)}
-              disabled={page >= (studentsData?.totalPages || 1) || isLoading}
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
-      </div>
+              {/* Pagination */}
+              <div className="flex items-center sm:justify-end justify-center space-x-2 py-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1 || isLoading}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {page} of {studentsData?.totalPages || 1}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => p + 1)}
+                  disabled={page >= (studentsData?.totalPages || 1) || isLoading}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
 
       {/* File Upload Dialog */}
