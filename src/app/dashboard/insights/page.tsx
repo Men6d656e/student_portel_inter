@@ -23,10 +23,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { useSession } from "@/lib/auth-client";
+import { PageLoader } from "@/components/page-loader";
 
 export default function PerformanceHub() {
+  const { data: session, isPending: isSessionPending } = useSession();
   const [selectedResultId, setSelectedResultId] = useState<string>("");
   const { theme } = useTheme();
+
 
 
   const { data: uploads } = trpc.uploadedResults.getMyUploads.useQuery({});
@@ -38,6 +42,10 @@ export default function PerformanceHub() {
       refetchOnWindowFocus: false,
     }
   );
+
+  if (isSessionPending) {
+    return <PageLoader />;
+  }
 
 
   /* ---------------- ANALYTICS ---------------- */
@@ -68,8 +76,8 @@ export default function PerformanceHub() {
       fail,
       avg: Number(avg.toFixed(1)),
       chartData: [
-        { name: "Pass", value: pass, color: "hsl(var(--primary))" },
-        { name: "Fail", value: fail, color: "hsl(var(--destructive))" },
+        { name: "Pass", value: pass, color: "var(--primary)" },
+        { name: "Fail", value: fail, color: "var(--destructive)" },
       ],
 
       topStudents: [...results]
@@ -192,10 +200,10 @@ export default function PerformanceHub() {
                           borderRadius: '12px',
                           border: 'none',
                           boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                          backgroundColor: 'hsl(var(--card))',
+                          backgroundColor: 'var(--card)',
                           padding: '12px'
                         }}
-                        itemStyle={{ fontWeight: '500' }}
+                        itemStyle={{ fontWeight: '500', color: 'var(--foreground)' }}
                       />
                       <Legend
                         verticalAlign="bottom"
@@ -234,9 +242,9 @@ export default function PerformanceHub() {
                       >
                         <div className="flex items-center gap-3">
                           <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold ${index === 0 ? 'bg-yellow-500/20 text-yellow-600' :
-                              index === 1 ? 'bg-slate-300/40 text-slate-600' :
-                                index === 2 ? 'bg-orange-500/20 text-orange-600' :
-                                  'bg-muted text-muted-foreground'
+                            index === 1 ? 'bg-slate-300/40 text-slate-600' :
+                              index === 2 ? 'bg-orange-500/20 text-orange-600' :
+                                'bg-muted text-muted-foreground'
                             }`}>
                             #{index + 1}
                           </div>

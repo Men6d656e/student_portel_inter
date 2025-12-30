@@ -24,6 +24,8 @@ import { toast } from "sonner";
 import { Loader, ArrowLeft, Upload } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
 import { processResultFile } from "@/lib/fileProcessors";
+import { useSession } from "@/lib/auth-client";
+import { PageLoader } from "@/components/page-loader";
 
 const subjects = [
   { label: "English", value: "ENGLISH" },
@@ -68,7 +70,9 @@ const generateYears = () => {
 const years = generateYears();
 
 export default function UploadResultPage() {
+  const { data: session, isPending } = useSession();
   const router = useRouter();
+
   const [formData, setFormData] = useState({
     subject: "",
     resultType: "",
@@ -92,6 +96,10 @@ export default function UploadResultPage() {
       setIsProcessing(false);
     },
   });
+
+  if (isPending) {
+    return <PageLoader />;
+  }
 
   const handleFileChange = (files: File[]) => {
     if (files.length > 0) {

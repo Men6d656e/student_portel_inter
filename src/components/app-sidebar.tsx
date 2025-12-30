@@ -133,7 +133,7 @@ export function AppSidebar() {
   return (
     <Sidebar className="">
       <SidebarHeader>
-        <div className="flex justify-center items-center py-4 text-center gap-3">
+        <div className="flex justify-center items-center py-6 text-center gap-3">
           <div className="p-2 rounded-full bg-primary/10">
             <GraduationCap className="w-8 h-8 text-primary" />
           </div>
@@ -150,22 +150,22 @@ export function AppSidebar() {
             <SidebarMenu>
               {userRole === "ADMIN" &&
                 adminItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={pathname === item.url}>
-                      <Link href={item.url} className="">
-                        <item.icon />
-                        <span className="p-2">{item.title}</span>
+                  <SidebarMenuItem key={item.title} className="">
+                    <SidebarMenuButton asChild isActive={pathname === item.url} className="h-11 px-4 hover:bg-primary/10 transition-colors">
+                      <Link href={item.url} className="flex items-center gap-3">
+                        <item.icon className="w-5 h-5" />
+                        <span className="font-medium">{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
               {userRole === "TEACHER" &&
                 teacherItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={pathname === item.url}>
-                      <Link href={item.url} className="">
-                        <item.icon />
-                        <span className="p-2">{item.title}</span>
+                  <SidebarMenuItem key={item.title} className="">
+                    <SidebarMenuButton asChild isActive={pathname === item.url} className="h-11 px-4 hover:bg-primary/10 transition-colors">
+                      <Link href={item.url} className="flex items-center gap-3">
+                        <item.icon className="w-5 h-5" />
+                        <span className="font-medium">{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -176,10 +176,13 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem className="px-5 mb-5">
-            <SidebarMenuButton onClick={handleLogout} className="border">
-              <LogOut />
-              <span className="p-1">Logout</span>
+          <SidebarMenuItem className="px-5 mb-6">
+            <SidebarMenuButton
+              onClick={handleLogout}
+              className="h-11 border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary transition-all font-semibold"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="ml-2">Logout</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

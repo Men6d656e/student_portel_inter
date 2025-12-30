@@ -5,14 +5,6 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Search, Plus, Upload, Users, GraduationCap, School, Pencil, Trash2, ChevronLeft, ChevronRight, Loader, AlertCircle } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,49 +15,28 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { FileUpload } from "@/components/ui/file-upload"
-import { processFile, StudentData } from "@/lib/fileProcessors"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Search, Plus, Upload, Users, GraduationCap, School, Pencil, Trash2, ChevronLeft, ChevronRight, Loader, AlertCircle } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { useSession } from "@/lib/auth-client"
+import { PageLoader } from "@/components/page-loader"
 import { trpc } from "@/lib/trpc"
 
-const degrees = [
-  { label: "Medical", value: "Medical" },
-  { label: "Non-Medical", value: "Non-Medical" },
-  { label: "Computer Science (ICS)", value: "ICS" },
-  { label: "Arts (FA)", value: "FA" },
-]
-
-const generateYears = () => {
-  const years = []
-  for (let year = 2020; year <= 2031; year++) {
-    years.push({ label: year.toString(), value: year.toString() })
-  }
-  return years
-}
+// Degrees and Years handled in the dedicated import page
 
 export default function StudentsPage() {
+  const { data: session, isPending } = useSession()
   const router = useRouter()
+
   const [page, setPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
   const [classFilter, setClassFilter] = useState<"ALL" | "1st Year" | "2nd Year">("ALL")
   const [deleteId, setDeleteId] = useState<string | null>(null)
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [selectedClass, setSelectedClass] = useState<string>("")
-  const [selectedDegree, setSelectedDegree] = useState<string>("")
-  const [selectedStartYear, setSelectedStartYear] = useState<string>("")
-  const [selectedEndYear, setSelectedEndYear] = useState<string>("")
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [processingProgress, setProcessingProgress] = useState(0)
-  const [processingStatus, setProcessingStatus] = useState("")
 
   // Debounce search query
   useEffect(() => {
@@ -90,20 +61,6 @@ export default function StudentsPage() {
     keepPreviousData: true,
   })
 
-  const bulkCreateMutation = trpc.student.bulkCreate.useMutation({
-    onSuccess: (data) => {
-      toast.success(data.message)
-      utils.student.getAll.invalidate()
-      utils.student.getStats.invalidate()
-      setUploadDialogOpen(false)
-      resetUploadForm()
-    },
-    onError: (error) => {
-      toast.error(error.message)
-      setIsProcessing(false)
-    },
-  })
-
   const deleteMutation = trpc.student.delete.useMutation({
     onSuccess: () => {
       toast.success("Student deleted successfully")
@@ -116,71 +73,17 @@ export default function StudentsPage() {
     },
   })
 
+  if (isPending) {
+    return <PageLoader />
+  }
+
   const students = studentsData?.students || []
   const totalStudents = statsData?.total || 0
   const firstYearCount = statsData?.firstYear || 0
   const secondYearCount = statsData?.secondYear || 0
 
   const resetUploadForm = () => {
-    setSelectedFile(null)
-    setSelectedClass("")
-    setSelectedDegree("")
-    setSelectedStartYear("")
-    setSelectedEndYear("")
-    setIsProcessing(false)
-    setProcessingProgress(0)
-    setProcessingStatus("")
-  }
-
-  const handleFileSelect = (files: File[]) => {
-    if (files.length > 0) {
-      setSelectedFile(files[0])
-    }
-  }
-
-  const handleImportSubmit = async () => {
-    if (!selectedFile || !selectedClass || !selectedDegree || !selectedStartYear || !selectedEndYear) {
-      toast.error("Please select a file, class, degree, start year, and end year")
-      return
-    }
-
-    // Combine start and end year into session
-    const session = `${selectedStartYear}-${selectedEndYear}`
-
-    setIsProcessing(true)
-    setProcessingStatus("Processing file...")
-    setProcessingProgress(0)
-
-    try {
-      // Process the file to extract student data
-      const extractedData: StudentData[] = await processFile(
-        selectedFile,
-        (progress) => {
-          setProcessingProgress(progress)
-          setProcessingStatus(`Extracting data... ${progress}%`)
-        }
-      )
-
-      setProcessingStatus(`Extracted ${extractedData.length} students. Saving to database...`)
-      setProcessingProgress(100)
-
-      // Prepare data for bulk create
-      const studentsToCreate = extractedData.map((student) => ({
-        name: student.name,
-        rollNo: student.rollNo,
-        class: selectedClass,
-        degree: selectedDegree,
-        session,
-      }))
-
-      // Call tRPC mutation
-      await bulkCreateMutation.mutateAsync({ students: studentsToCreate })
-      console.log(studentsToCreate)
-    } catch (error) {
-      console.log(error)
-      toast.error((error as Error).message || "Failed to process file")
-      setIsProcessing(false)
-    }
+    // Moved to dedicated import page
   }
 
   const handleDelete = () => {
@@ -202,8 +105,10 @@ export default function StudentsPage() {
           <p className="text-muted-foreground">Manage student records and monitor enrollment status.</p>
         </div>
         <div className="flex gap-2 sm:flex-row flex-col w-full sm:w-auto">
-          <Button variant="outline" onClick={() => setUploadDialogOpen(true)} className="hover:bg-primary/5 border-primary/10">
-            <Upload className="mr-2 h-4 w-4" /> Import Students
+          <Button variant="outline" asChild className="hover:bg-primary/5 border-primary/10">
+            <Link href="/dashboard/students/import">
+              <Upload className="mr-2 h-4 w-4" /> Import Students
+            </Link>
           </Button>
           <Button asChild className="shadow-lg shadow-primary/20 transition-all hover:scale-105">
             <Link href="/dashboard/students/new">
@@ -413,118 +318,8 @@ export default function StudentsPage() {
       </Card>
 
 
-      {/* File Upload Dialog */}
-      <Dialog open={uploadDialogOpen} onOpenChange={(open) => {
-        setUploadDialogOpen(open)
-        if (!open) resetUploadForm()
-      }}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Import Students</DialogTitle>
-            <DialogDescription>
-              Upload a CSV or Excel file containing student data (name and rollNo columns), or an image with student information.
-            </DialogDescription>
-          </DialogHeader>
+      {/* Modal logic removed and replaced with dedicated page */}
 
-          <div className="space-y-4">
-            {/* Class, Degree, and Session Selection */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Class</Label>
-                <Select value={selectedClass} onValueChange={setSelectedClass} disabled={isProcessing}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Class" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1st Year">1st Year</SelectItem>
-                    <SelectItem value="2nd Year">2nd Year</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Degree</Label>
-                <Select value={selectedDegree} onValueChange={setSelectedDegree} disabled={isProcessing}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Degree" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {degrees.map((d) => (
-                      <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Start Year</Label>
-                <Select value={selectedStartYear} onValueChange={setSelectedStartYear} disabled={isProcessing}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Start Year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {generateYears().map((y) => (
-                      <SelectItem key={y.value} value={y.value}>{y.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>End Year</Label>
-                <Select value={selectedEndYear} onValueChange={setSelectedEndYear} disabled={isProcessing}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="End Year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {generateYears().map((y) => (
-                      <SelectItem key={y.value} value={y.value}>{y.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* File Upload Area */}
-            {!isProcessing && (
-              <div className="w-full border border-dashed bg-white dark:bg-black border-neutral-200 dark:border-neutral-800 rounded-lg">
-                <FileUpload onChange={handleFileSelect} />
-              </div>
-            )}
-
-            {/* Processing State */}
-            {isProcessing && (
-              <div className="flex flex-col items-center justify-center p-8 space-y-4">
-                <Loader className="h-12 w-12 animate-spin text-primary" />
-                <div className="text-center space-y-2">
-                  <p className="font-medium">{processingStatus}</p>
-                  {processingProgress > 0 && (
-                    <div className="w-full max-w-xs mx-auto bg-secondary rounded-full h-2">
-                      <div
-                        className="bg-primary h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${processingProgress}%` }}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setUploadDialogOpen(false)} disabled={isProcessing}>
-              Cancel
-            </Button>
-            <Button onClick={handleImportSubmit} disabled={!selectedFile || !selectedClass || !selectedDegree || !selectedStartYear || !selectedEndYear || isProcessing}>
-              {isProcessing ? (
-                <>
-                  <Loader className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                "Import Students"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
