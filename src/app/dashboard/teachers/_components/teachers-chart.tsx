@@ -37,27 +37,27 @@ export function TeachersChart() {
                             <BarChart data={rankings}>
                                 <defs>
                                     <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
-                                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                                        <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.8} />
+                                        <stop offset="95%" stopColor="var(--primary)" stopOpacity={0.3} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" vertical={false} />
                                 <XAxis
                                     dataKey="name"
-                                    stroke="hsl(var(--muted-foreground))"
+                                    stroke="var(--muted-foreground)"
                                     fontSize={12}
                                     tickLine={false}
                                     axisLine={false}
                                 />
                                 <Tooltip
-                                    cursor={{ fill: 'hsl(var(--muted)/0.2)' }}
+                                    cursor={{ fill: 'var(--muted)', fillOpacity: 0.15 }}
                                     contentStyle={{
-                                        backgroundColor: 'hsl(var(--card))',
-                                        borderColor: 'hsl(var(--border))',
+                                        backgroundColor: 'var(--card)',
+                                        borderColor: 'var(--border)',
                                         borderRadius: 'var(--radius)',
                                         boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                                     }}
-                                    itemStyle={{ color: 'hsl(var(--foreground))' }}
+                                    itemStyle={{ color: 'var(--foreground)' }}
                                 />
                                 <Bar
                                     dataKey="uploads"

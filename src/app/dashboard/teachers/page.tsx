@@ -1,37 +1,28 @@
+"use client";
+
 import { StatsCards } from "./_components/stats-cards";
 import { TeachersChart } from "./_components/teachers-chart";
 import { TeachersTable } from "./_components/teachers-table";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import Link from "next/link";
-import { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Teachers Management",
-  description: "Manage verify and update teachers.",
-};
-
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import AccessDeniedPage from "@/app/access-denied/page";
+import { Card, CardContent } from "@/components/ui/card";
+import { useSession } from "@/lib/auth-client";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import AccessDeniedPage from "@/app/access-denied/page";
+import { PageLoader } from "@/components/page-loader";
 
-export default async function TeachersPage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+export default function TeachersPage() {
+  const { data: session, isPending } = useSession();
+
+  if (isPending) {
+    return <PageLoader />;
+  }
 
   if (!session?.user) {
     redirect("/sign-in");
   }
 
-  // Check for admin role.
-  // Note: session.user.role might need type extension in better-auth,
-  // but if it's in DB, better-auth usually returns it if configured.
-  // Assuming role is available on user object.
-  // If strict type checking fails, I might need to cast or fetch user from DB.
-  // For safety, I'll cast or assume it works for now, or check DB if critical.
   if ((session.user as any).role !== "ADMIN") {
     return <AccessDeniedPage />;
   }

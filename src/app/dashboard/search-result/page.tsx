@@ -31,6 +31,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { PageLoader } from "@/components/page-loader";
 
 // Reusing constants from Upload Result to ensure consistency
 const resultTypes = [
@@ -58,8 +59,9 @@ const generateYears = () => {
 const years = generateYears();
 
 export default function SearchResultPage() {
-    const { data: session } = useSession();
+    const { data: session, isPending } = useSession();
     const userRole = (session?.user as any)?.role;
+
 
     const [formData, setFormData] = useState({
         rollNo: "",
@@ -75,7 +77,7 @@ export default function SearchResultPage() {
     const [hasSearched, setHasSearched] = useState(false);
 
     const searchMutation = trpc.result.searchStudentResults.useMutation({
-        onSuccess: (data) => {
+        onSuccess: (data: any) => {
             setHasSearched(true);
             setSearchResults(data);
             if (data.length > 0) {
@@ -83,16 +85,19 @@ export default function SearchResultPage() {
                 toast.success(`Found ${data.length} results`);
             } else {
                 setStudentInfo(null);
-                // toast.info("No results found for the given criteria");
             }
         },
-        onError: (error) => {
+        onError: (error: any) => {
             setHasSearched(true);
             setSearchResults(null);
             setStudentInfo(null);
             toast.error(error.message);
         },
     });
+
+    if (isPending) {
+        return <PageLoader />;
+    }
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();

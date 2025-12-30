@@ -36,7 +36,7 @@ export function DashboardHeader() {
     });
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-background px-4 sticky top-0 z-10 transition-all duration-300">
+    <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-background px-8 sticky top-0 z-10 transition-all duration-300">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
       </div>

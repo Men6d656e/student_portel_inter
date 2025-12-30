@@ -1,7 +1,17 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TeacherIdentityVerificationCard from "./_component/teacher-identification-card";
+import { useSession } from "@/lib/auth-client";
+import { PageLoader } from "@/components/page-loader";
 
 const AprovelPage = () => {
+  const { isPending } = useSession();
+
+  if (isPending) {
+    return <PageLoader />;
+  }
+
   return (
     <Card className="m-8">
       <CardHeader>

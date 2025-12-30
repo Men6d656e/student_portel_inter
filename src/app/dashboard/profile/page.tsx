@@ -11,11 +11,16 @@ import { useState } from "react"
 import { toast } from "sonner"
 import { authClient } from "@/lib/auth-client"
 import { Loader } from "lucide-react"
+import { PageLoader } from "@/components/page-loader"
 
 export default function ProfilePage() {
     const { data: session, isPending } = useSession()
     const [name, setName] = useState(session?.user?.name || "")
     const [isUpdating, setIsUpdating] = useState(false)
+
+    if (isPending) {
+        return <PageLoader />
+    }
 
     // Sync name when session loads
     if (session?.user?.name && name === "") {
@@ -36,9 +41,6 @@ export default function ProfilePage() {
         }
     }
 
-    if (isPending) {
-        return <div className="flex h-full items-center justify-center"><Loader className="animate-spin" /></div>
-    }
 
     return (
         <div className="p-8 space-y-8 ">
@@ -85,7 +87,7 @@ export default function ProfilePage() {
                     </div>
                 </CardContent>
             </Card>
-           
+
         </div>
     )
 }

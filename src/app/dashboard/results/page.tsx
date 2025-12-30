@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useSession } from "@/lib/auth-client";
+import { PageLoader } from "@/components/page-loader";
 
 const subjectLabels: Record<string, string> = {
   ENGLISH: "English",
@@ -72,7 +73,8 @@ const resultTypeLabels: Record<string, string> = {
 };
 
 export default function ResultsPage() {
-  const { data: session } = useSession();
+  const { data: session, isPending } = useSession();
+
   // const userRole = session?.user?.;
   // console.log("User Role:", userRole);
 
@@ -83,6 +85,10 @@ export default function ResultsPage() {
     "ALL" | "DECEMBER_TEST" | "MID_TERM" | "OTHER"
   >("ALL");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  if (isPending) {
+    return <PageLoader />;
+  }
 
   // Debounce search query
   useEffect(() => {
